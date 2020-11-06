@@ -7,7 +7,7 @@ function _connect(cb) {
         if (err) {
             console.log("失败");
         } else {
-            //指定数据库的名字"bang"
+            //指定数据库的名字
             var db = client.db("vue-element-ui");
             cb(db);
         }
