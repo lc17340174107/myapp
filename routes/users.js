@@ -1,6 +1,7 @@
+const { json } = require('express');
 var express = require('express');
-const { systemSend } = require('../common/utils');
-const { find, findOne } = require('../mongodb/collection');
+const { systemSend, RandomString } = require('../common/utils');
+const { find, findOne, updateOne, updateOneById } = require('../mongodb/collection');
 var router = express.Router();
 
 // 登录接口
@@ -13,7 +14,15 @@ router.post('/vue-element-admin/user/login', (req, res) => {
       res.send({code: 101, message: '密码错误'})
     }
     if (req.body.username == result.username && req.body.password == result.password) {
-      systemSend(res, {token: result.token})
+      let token = RandomString(32);
+      result.token = token
+      let obj = {
+        $set: {token: token}
+      }
+      updateOneById("user", result._id, obj, (err, result) => {
+        if(err) throw err;
+        systemSend(res, {token: token})
+      })
     }
   })
 })
@@ -26,6 +35,24 @@ router.get('/vue-element-admin/user/info', (req, res) => {
       systemSend(res, result)
     } else {
       res.send({code: 101, message: "faied token"})
+    }
+  })
+})
+
+// 退出登录接口
+router.post('/vue-element-admin/user/logout', (req, res) => {
+  findOne("user", {token: req.headers['x-token']}, (err, result) => {
+    if(err) throw err;
+    if (result != null) {
+      let obj = {
+        $set: {token: null}
+      }
+      updateOneById("user", result._id, obj, (err, result) => {
+        if(err) throw err;
+        systemSend(res, {data: 'success'})
+      })
+    } else {
+      res.send({code: 101, message: "failed token"})
     }
   })
 })
