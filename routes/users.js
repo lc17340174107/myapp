@@ -1,12 +1,11 @@
-const { json } = require('express');
-var express = require('express');
+const express = require('express');
 const { systemSend, RandomString } = require('../common/utils');
-const { find, findOne, updateOne, updateOneById } = require('../mongodb/collection');
-var router = express.Router();
+const { findOne, updateOneById } = require('../mongodb/collection');
+const router = express.Router();
 
 // 登录接口
 router.post('/vue-admin-template/user/login', (req, res) => {
-  findOne("user", { username: req.body.username }, (err, result) => {
+  findOne("user", { username: req.body.username, password: req.body.password }, (err, result) => {
     if (err) throw err;
     if (result == null) {
       res.send({ code: 101, message: '用户名或密码错误' })

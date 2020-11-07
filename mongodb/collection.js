@@ -3,7 +3,7 @@ var MongoClient = mongodb.MongoClient;
 var connStr = "mongodb://127.0.0.1:27017/";
 //连接数据库
 function _connect(cb) {
-    MongoClient.connect(connStr, {useUnifiedTopology: true}, function (err, client) {
+    MongoClient.connect(connStr, { useUnifiedTopology: true }, function (err, client) {
         if (err) {
             console.log("失败");
         } else {
@@ -56,17 +56,28 @@ module.exports.find = function (collection, obj, cb) {
     obj.whereObj = obj.whereObj || {};
     obj.sortObj = obj.sortObj || {};
     obj.skip = obj.skip || 0;
-    obj.limit = obj.limit || 0;
-    _connect(function (db) {
-        db.collection(collection)
-            .find(obj.whereObj)
-            .sort(obj.sortObj)
-            .limit(obj.limit)
-            .skip(obj.skip)
-            .toArray(function (err, results) {
-                cb(err, results);
-            })
-    })
+    if (obj.limit) {
+        _connect(function (db) {
+            db.collection(collection)
+                .find(obj.whereObj)
+                .sort(obj.sortObj)
+                .limit(obj.limit)
+                .skip(obj.skip)
+                .toArray(function (err, results) {
+                    cb(err, results);
+                })
+        })
+    } else {
+        _connect(function (db) {
+            db.collection(collection)
+                .find(obj.whereObj)
+                .sort(obj.sortObj)
+                .skip(obj.skip)
+                .toArray(function (err, results) {
+                    cb(err, results);
+                })
+        })
+    }
 }
 /*
 * 查找一条记录*/
