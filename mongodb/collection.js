@@ -58,14 +58,20 @@ module.exports.find = function (collection, obj, cb) {
     obj.skip = obj.skip || 0;
     if (obj.limit) {
         _connect(function (db) {
-            db.collection(collection)
+            db.collection(collection).count().then(total => {
+                db.collection(collection)
                 .find(obj.whereObj)
                 .sort(obj.sortObj)
                 .limit(obj.limit)
                 .skip(obj.skip)
                 .toArray(function (err, results) {
-                    cb(err, results);
+                    let result = {
+                        results: results,
+                        total: total
+                    }
+                    cb(err, result);
                 })
+            })
         })
     } else {
         _connect(function (db) {
