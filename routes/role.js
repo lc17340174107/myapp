@@ -29,6 +29,26 @@ router.post('/vue-admin-template/role/add', (req, res) => {
             insertOne('roles', {role: req.body.role}, (err, result) => {
                 if (err) throw err;
             })
+            if (req.body.menus) {
+                let { menus } = req.body
+                menus.map(e => {
+                    if (e._id) {
+                        findOneById('route', e._id, (err, result) => {
+                            if (err) throw err;
+                            let { meta } = result
+                            meta.roles.push(req.body.role)
+                            let obj = meta
+                            updateOneById('route', e._id, {$set: {meta: obj}}, (err, result) => {
+                                if (err) throw err;
+                            })
+                        })
+                    } else if (e.pid) {
+                        // 改角色新增的菜单是子元素的情况下   还未写
+                    }
+                })
+            } else {
+                systemSend(res, {message: "新增角色成功"})
+            }
         }
     })
 })
