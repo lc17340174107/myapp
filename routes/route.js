@@ -1,5 +1,5 @@
 var express = require('express');
-const { systemSend } = require('../common/utils');
+const { systemSend, filterRoute } = require('../common/utils');
 const { find, findOne } = require('../mongodb/collection');
 var router = express.Router();
 
@@ -11,7 +11,8 @@ router.get('/vue-admin-template/route/getRoutes', (req, res) => {
             if(result != null) {
                 find('route', {}, (err, result) => {
                     if(err) throw err;
-                    systemSend(res, result)
+                    let resultData = filterRoute(result)
+                    systemSend(res, resultData)
                 })
             } else {
                 res.send({ code: 101, message: "faied token" })

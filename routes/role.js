@@ -6,6 +6,15 @@ const { systemSend } = require('../common/utils');
 const { find, findOneById, deleteOneById } = require('../mongodb/collection');
 var router = express.Router();
 
+/**
+ * @param arr 需要递归的数组
+ * @param children 需要进一步循环的字段
+ * @param str 需要添加的数据
+ * **/
+function recursion (arr, children, str) {
+
+}
+
 // 查询权限用户列表接口
 router.get('/vue-admin-template/role/list', (req, res) => {
     let regPos = /^[0-9]*[1-9][0-9]*$/; //正整数
@@ -43,7 +52,16 @@ router.post('/vue-admin-template/role/add', (req, res) => {
                             })
                         })
                     } else if (e.pid) {
-                        // 改角色新增的菜单是子元素的情况下   还未写
+                        // 改角色新增的菜单是子元素的情况下
+                        findOneById('route', e.pid, (err, result) => {
+                            if (err) throw err;
+                            let { meta } = result
+                            meta.roles.push(req.body.role)
+                            let obj = meta
+                            updateOneById('route', e._id, {$set: {meta: obj}}, (err, result) => {
+                                if (err) throw err;
+                            })
+                        })
                     }
                 })
             } else {
