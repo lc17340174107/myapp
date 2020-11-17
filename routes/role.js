@@ -1,9 +1,6 @@
 var express = require('express');
-const {updateOneById} = require("../mongodb/collection");
-const {findOne} = require("../mongodb/collection");
-const {insertOne} = require("../mongodb/collection");
 const { systemSend } = require('../common/utils');
-const { find, findOneById, deleteOneById } = require('../mongodb/collection');
+const { find, findOneById, deleteOneById, updateOneById, findOne, insertOne } = require('../mongodb/collection');
 var router = express.Router();
 
 /**
@@ -28,7 +25,7 @@ router.get('/vue-admin-template/role/list', (req, res) => {
     }
 })
 
-// 新增角色接口 （目前只新增了角色  还没有新增菜单的权限）
+// 新增角色接口
 router.post('/vue-admin-template/role/add', (req, res) => {
     findOne('roles', {role: req.body.role}, (err, result) => {
         if (err) throw err;
@@ -38,37 +35,27 @@ router.post('/vue-admin-template/role/add', (req, res) => {
             insertOne('roles', {role: req.body.role}, (err, result) => {
                 if (err) throw err;
             })
-            if (req.body.menus) {
-                let { menus } = req.body
-                menus.map(e => {
-                    if (e._id) {
-                        findOneById('route', e._id, (err, result) => {
-                            if (err) throw err;
-                            let { meta } = result
-                            meta.roles.push(req.body.role)
-                            let obj = meta
-                            updateOneById('route', e._id, {$set: {meta: obj}}, (err, result) => {
-                                if (err) throw err;
-                            })
+            if (req.body.menus && req.body.menus.length > 0) {
+                req.body.menus.map(e => {
+                    let obj = {}
+                    findOneById('route', e._id, (err, result) => {
+                        if (err) throw err;
+                        obj = result;
+                        obj.meta.roles.push(req.body.role)
+                        updateOneById('route', e._id, {$set: obj}, (err, result) => {
+                            if (err) throw err
                         })
-                    } else if (e.pid) {
-                        // 改角色新增的菜单是子元素的情况下
-                        findOneById('route', e.pid, (err, result) => {
-                            if (err) throw err;
-                            let { meta } = result
-                            meta.roles.push(req.body.role)
-                            let obj = meta
-                            updateOneById('route', e._id, {$set: {meta: obj}}, (err, result) => {
-                                if (err) throw err;
-                            })
-                        })
-                    }
+                    })
                 })
-            } else {
-                systemSend(res, {message: "新增角色成功"})
             }
+            systemSend(res, {message: "新增角色成功"})
         }
     })
+})
+
+// 编辑角色接口
+router.post('/vue-admin-template/role/updateOne', (req, res) => {
+
 })
 
 // 删除角色接口
@@ -76,8 +63,20 @@ router.delete('/vue-admin-template/role/deleteOne', (req, res) => {
     findOneById('roles', req.body._id, (err, result) => {
         if(err) throw err;
         if(result != null) {
-            deleteOneById('roles', req.body._id, (err, result) => {
+            deleteOneById('roles', req.body._id, (err, result1) => {
                 if(err) throw err;
+                find('route',{}, (err, result2) => {
+                    result2.map(e => {
+                        let obj = {}
+                        obj = e
+                        obj.meta.roles = e.meta.roles.filter(role => {
+                            return role !== result.role
+                        })
+                        updateOneById('route', e._id, {$set: obj}, (err, result3) => {
+                            if (err) throw err
+                        })
+                    })
+                })
                 systemSend(res, {message: "删除成功"})
             })
         }

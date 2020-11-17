@@ -21,20 +21,27 @@ let utils = {
         _id = _id || "_id"
         parentId = parentId || "parentId"
         children = children || "children"
-        let result = arr.map(parent => {
+        arr.map(parent => {
             arr.filter(child => {
                 if (parent[_id] == child[parentId]) {
                     parent[children].push(child)
                     if (child[children] && child[children] !== "") {
                         utils.filterRoute(child[children], _id, parentId, children)
+                    } else {
+                        return false
                     }
                 } else {
                     return false
                 }
             })
-            return parent
         })
-        return result
+        for (let i = 0; i < arr.length; i++){
+            if (arr[i][children] && arr[i][children].length === 0) {
+                arr.splice(i,1);
+                i--
+            }
+        }
+        return arr
     }
 };
 module.exports = utils;
