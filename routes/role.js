@@ -3,6 +3,10 @@ const { systemSend } = require('../common/utils');
 const { find, findOneById, deleteOneById, updateOneById, findOne, insertOne } = require('../mongodb/collection');
 var router = express.Router();
 
+
+//  后面吧角色表和菜单表通过id关联起来
+
+
 /**
  * @param arr 需要递归的数组
  * @param children 需要进一步循环的字段
@@ -55,7 +59,43 @@ router.post('/vue-admin-template/role/add', (req, res) => {
 
 // 编辑角色接口
 router.post('/vue-admin-template/role/updateOne', (req, res) => {
-
+    findOneById('roles', req.body._id, (err, result) => {
+        if (err) throw err;
+        if (result === null) {
+            res.send({code: 101, message: '未查询到角色'})
+        } else if (req.body.role !== 'admin') {
+            if (req.body.role !== result.role) {
+                let obj = result
+                obj.role = req.body.role
+                updateOneById('roles', req.body._id, {$set: obj}, (e, re) => {
+                    if (e) throw e;
+                })
+            }
+            find('route', {}, (er, resu) => {
+                if (er) throw er;
+                resu.map(e => {
+                    let object = e
+                    object.meta.roles = e.meta.roles.filter(item => {
+                        return item !== result.role
+                    })
+                    updateOneById('route', e._id, {$set: object}, (err, result) => {
+                        if (err) return err;
+                    })
+                    req.body.menus.map(menu => {
+                        if (menu._id == e._id) {
+                            object.meta.roles.push(req.body.role)
+                            updateOneById('route', e._id, {$set: object}, (err, result) => {
+                                if (err) return err;
+                            })
+                        }
+                    })
+                })
+            })
+            systemSend(res, {message: "修改成功"})
+        } else {
+            res.send({code: 101, message: '不能修改此角色'})
+        }
+    })
 })
 
 // 删除角色接口
