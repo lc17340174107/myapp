@@ -63,7 +63,8 @@ router.post('/vue-admin-template/role/updateOne', (req, res) => {
         if (err) throw err;
         if (result === null) {
             res.send({code: 101, message: '未查询到角色'})
-        } else if (req.body.role !== 'admin') {
+        } else if (result.role !== 'admin') {
+            let oldRole = result.role
             if (req.body.role !== result.role) {
                 let obj = result
                 obj.role = req.body.role
@@ -76,7 +77,7 @@ router.post('/vue-admin-template/role/updateOne', (req, res) => {
                 resu.map(e => {
                     let object = e
                     object.meta.roles = e.meta.roles.filter(item => {
-                        return item !== result.role
+                        return item != oldRole
                     })
                     updateOneById('route', e._id, {$set: object}, (err, result) => {
                         if (err) return err;
@@ -84,7 +85,7 @@ router.post('/vue-admin-template/role/updateOne', (req, res) => {
                     req.body.menus.map(menu => {
                         if (menu._id == e._id) {
                             object.meta.roles.push(req.body.role)
-                            updateOneById('route', e._id, {$set: object}, (err, result) => {
+                            updateOneById('route', menu._id, {$set: object}, (err, result) => {
                                 if (err) return err;
                             })
                         }
